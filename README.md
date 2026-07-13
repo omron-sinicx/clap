@@ -5,6 +5,8 @@
     Yuri Ishitoya<sup>1,*,†</sup> &nbsp;
     Jeremy Siburian<sup>2,*,†</sup> &nbsp;
     Masashi Hamaya<sup>3</sup> &nbsp;
+</p>
+<p align="center">
     Kuniaki Saito<sup>3</sup> &nbsp;
     Cristian C. Beltran-Hernandez<sup>3</sup> &nbsp;
     Mai Nishimura<sup>3,†</sup>
