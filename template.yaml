@@ -1,0 +1,293 @@
+theme: default # default || dark
+organization: OMRON SINIC X
+twitter: '@omron_sinicx'
+title: '👏CLAP: Direct VLM-to-VLA Adaptation via Language-Action Grounding'
+conference: CoRL2026
+resources:
+  paper: https://arxiv.org/abs/2607.08974
+  poster:
+  code: https://github.com/omron-sinicx/clap
+  video:
+  blog:
+  demo:
+  huggingface: https://huggingface.co/collections/omron-sinicx/clap
+description: CLAP (Causal Language-Action Prediction) turns pretrained VLMs into VLAs by prepending a natural-language action plan to each numeric action chunk, so action prediction is causally conditioned on it with no architectural modification, action expert, or extra annotation. 2B CLAP hits 90.8% on LIBERO (+14.9 pt over VLA-0) with 4-5 hours of fine-tuning.
+image: https://omron-sinicx.github.io/clap/teaser.png
+url: https://omron-sinicx.github.io/clap
+speakerdeck:
+authors:
+  - name: Yuri Ishitoya
+    affiliation: [1]
+    equal: true
+    intern: true
+    position: Researcher
+    url: https://ishity.github.io/
+  - name: Jeremy Siburian
+    affiliation: [2]
+    equal: true
+    intern: true
+    position: Researcher
+    url: https://jsiburian.github.io/
+  - name: Masashi Hamaya
+    affiliation: [3]
+    position: Principal investigator
+    url: https://sites.google.com/view/masashihamaya/home?pli=1
+  - name: Haruto Suzuki
+    affiliation: [3]
+    intern: true
+    position: Intern
+  - name: Kuniaki Saito
+    affiliation: [3]
+    position: Senior Researcher
+    url: https://ksaito-ut.github.io/
+  - name: Toshihiko Fukushima
+    affiliation: [3]
+    position: Senior Researcher
+    url: https://tsfk.me/
+  - name: Cristian C. Beltran-Hernandez
+    affiliation: [3]
+    position: Senior Researcher
+    url: https://cristianbehe.me/
+  - name: Mai Nishimura
+    affiliation: [3]
+    equal: true
+    position: Senior Researcher
+    url: https://denkiwakame.github.io
+contact_ids: ['github', 'omron', 8] #=> github issues, contact@sinicx.com, 8th author
+affiliations:
+  - Ochanomizu University
+  - The University of Tokyo
+  - OMRON SINIC X Corporation
+meta:
+bibtex: |
+  @inproceedings{
+
+  ishitoya2026clap,
+
+  title={CLAP: Direct VLM-to-VLA Adaptation via Language-Action Grounding},
+
+  author={Yuri Ishitoya and Jeremy Siburian and Masashi Hamaya and Haruto Suzuki and Kuniaki Saito and Toshihiko Fukushima and Cristian C. Beltran-Hernandez and Mai Nishimura},
+
+  booktitle={10th Annual Conference on Robot Learning},
+
+  year={2026}
+
+  }
+header:
+  bg_curve: sinic_curve_c.png
+
+teaser: teaser.png
+overview: |
+  Vision-language-action models (VLAs) inherit rich semantic capabilities from pretrained VLMs, yet fine-tuning on robot action data can silently collapse these capabilities: predicting bare numeric action tokens pulls generation far from the pretrained language distribution, degrading multimodal understanding, spatial reasoning, and generalization.
+
+  We propose **CLAP** (Causal Language-Action Prediction), which prepends each numeric action sequence with a natural-language action description. Because generation is autoregressive, precise action-token prediction is causally conditioned on this language-action plan.
+
+  - With 4-5 hours of fine-tuning, 2B CLAP achieves **90.8% on LIBERO** (+14.9 pt over VLA-0)
+  - Consistent gains at all scales: +13.5 pt (0.8B), +14.9 pt (2B)
+  - 60% real-robot success rate on pick-and-place, maintained under out-of-distribution distractor objects (2B)
+  - Released as an **open-weight, multi-scale family** from a single VLM lineage
+
+body:
+  - title: Challenges in VLM-to-VLA Adaptation
+    text: |
+      Existing VLM-to-VLA approaches each leave something on the table:
+
+      <ul>
+        <li><strong>Bare numeric action tokens</strong> are directly executable, but diverge from the VLM's pretrained distribution and erode its semantic capabilities.</li>
+        <li><strong>Language-only action representations</strong> stay close to that distribution, but are too imprecise for low-level control, or still need a separate action expert to produce executable actions.</li>
+        <li><strong>Capability-preserving methods</strong> protect the VLM's pretrained knowledge, but add extra modules, gradient-blocking schemes, or co-training data.</li>
+        <li><strong>Compact VLAs</strong> target efficient deployment, but are typically released at a single fixed scale or depend on extra policy components.</li>
+      </ul>
+
+      CLAP addresses all of these at once: it stays anchored to the pretrained distribution while emitting executable numeric tokens, across a full family from one VLM lineage.
+
+  - title: Method
+    text: |
+      CLAP first generates a short natural-language description of the intended motion, then predicts the discrete action tokens conditioned on it. Because generation is autoregressive, each action token causally attends to this description, making it a **conditioning intermediate** rather than an auxiliary output.
+
+      CLAP changes only the output representation, with no action expert, no vocabulary modification, no architectural change, and no manual annotation beyond the original demonstrations.
+
+      #### Training
+      <img src="train.png" alt="CLAP Training" class="uk-align-center uk-responsive-width" />
+
+      The language-action description is generated deterministically from the ground-truth action chunk by a fixed template, for example *"move forward 3 cm, tilt right 1 degree, close gripper"*. The model is trained on the concatenated sequence with the standard autoregressive cross-entropy objective.
+
+      #### Inference
+      <img src="inference.png" alt="CLAP Inference" class="uk-align-center uk-responsive-width" />
+
+      At inference, the fine-tuned VLM generates both the language description and the numeric action tokens autoregressively. The language prefix is then stripped, and the remaining integer tokens are decoded into an 8-step action chunk for open-loop execution.
+
+  - title: LIBERO Results
+    text: |
+      Our main baseline is **VLA-0**, which predicts bare numeric action tokens directly with no language prefix. We reproduce it on the same Qwen3.5 backbones, LIBERO data, and training budget, so the only difference is CLAP's language-action prefix.
+      CLAP consistently improves over VLA-0 across all model sizes under this matched protocol. 
+
+      #### LIBERO Benchmark (4-5 hours of fine-tuning, h=8, backbone: Qwen3.5)
+      <div class="uk-overflow-auto">
+      <table class="uk-table uk-table-divider uk-table-small uk-text-small">
+        <thead>
+          <tr>
+            <th>Size</th>
+            <th>Model</th>
+            <th>Spatial↑</th>
+            <th>Object↑</th>
+            <th>Goal↑</th>
+            <th>Long↑</th>
+            <th><strong>Avg↑</strong></th>
+            <th><strong>Δ vs VLA-0</strong></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="color: gray;">
+            <td rowspan="2" style="vertical-align: middle; font-weight: bold; color: black;">0.8B</td>
+            <td>VLA-0 (repro.)</td>
+            <td>77.6</td><td>87.8</td><td>78.4</td><td>60.6</td><td>76.1</td><td>—</td>
+          </tr>
+          <tr style="background-color: #F6EFE6;">
+            <td><strong>CLAP (Ours)</strong></td>
+            <td><strong>92.6</strong></td><td><strong>97.8</strong></td><td><strong>88.4</strong></td><td><strong>79.6</strong></td><td><strong>89.6</strong></td><td><strong>+13.5</strong></td>
+          </tr>
+          <tr style="color: gray;">
+            <td rowspan="2" style="vertical-align: middle; font-weight: bold; color: black;">2B</td>
+            <td>VLA-0 (repro.)</td>
+            <td>77.8</td><td>86.6</td><td>77.0</td><td>62.4</td><td>75.9</td><td>—</td>
+          </tr>
+          <tr style="background-color: #F6EFE6;">
+            <td><strong>CLAP (Ours)</strong></td>
+            <td><strong>93.0</strong></td><td><strong>97.4</strong></td><td><strong>90.8</strong></td><td><strong>82.0</strong></td><td><strong>90.8</strong></td><td><strong>+14.9</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+
+      #### Comparison with robot-pretrained VLAs
+      With only 4-5 hours of fine-tuning and no robot pretraining beyond LIBERO, 2B CLAP (90.8%) is competitive with VLAs trained on large-scale robot data, exceeding SmolVLA and OpenVLA on average.
+
+      <div class="uk-overflow-auto">
+      <table class="uk-table uk-table-divider uk-table-small uk-text-small">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Backbone</th>
+            <th>Size</th>
+            <th>Robot Pretrain</th>
+            <th><strong>Avg↑</strong></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background-color: #F6EFE6;">
+            <td><strong>CLAP (Ours)</strong></td>
+            <td>Qwen3.5</td>
+            <td>2B</td>
+            <td>–</td>
+            <td><strong>90.8</strong></td>
+          </tr>
+          <tr style="color: gray;">
+            <td>SmolVLA<sup>†</sup></td>
+            <td>SmolVLM2</td>
+            <td>2.25B</td>
+            <td>–</td>
+            <td>88.8</td>
+          </tr>
+          <tr style="color: gray;">
+            <td>VLA-0<sup>‡</sup></td>
+            <td>Qwen2.5-VL</td>
+            <td>3B</td>
+            <td>–</td>
+            <td>94.7</td>
+          </tr>
+          <tr style="color: gray;">
+            <td>π0.5</td>
+            <td>PaliGemma</td>
+            <td>3B</td>
+            <td>✓</td>
+            <td>96.85</td>
+          </tr>
+          <tr style="color: gray;">
+            <td>OpenVLA</td>
+            <td>Prismatic</td>
+            <td>7B</td>
+            <td>✓</td>
+            <td>76.5</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+      <span class="uk-text-meta"><sup>†</sup> SmolVLA uses community-scale robot pretraining. <sup>‡</sup> Original VLA-0 uses Qwen2.5-VL-3B and 64 epochs. Gray rows use different backbones, training budgets, or pretraining data, and are contextual references rather than matched comparisons.</span>
+
+  - title: Real-Robot Deployment
+    text: |
+      We deploy CLAP on a UR5e manipulator for cluttered pick-and-place tasks, fine-tuning directly from pretrained VLM checkpoints on 120 real-robot demonstrations (40 episodes per object: carrot, cube, tomato).
+
+      #### Robot Setup
+      <img src="real-robot-setting.png" alt="Real-Robot Setup" class="uk-align-center uk-responsive-width" />
+      A UR5e arm with a Robotiq 2F-85 gripper performs pick-and-place tasks in cluttered tabletop scenes. Cam1 (fixed side view) and cam2 (wrist-mounted) provide the two RGB observations used as model input.
+
+      #### Task Setup
+      <img src="real-robot-tasks.png" alt="Real-Robot Tasks" class="uk-align-center uk-responsive-width" />
+      Pick-and-place tasks with three training objects (carrot, cube, tomato) under randomized layouts. Out-of-distribution evaluation introduces unseen distractor objects (silver watering can, orange toy car) into the scene.
+
+      #### Real-Robot Success Rates (20 trials per condition, backbone: Qwen3.5)
+      The 2B model maintains its in-domain success rate (60%) even under OOD conditions with unseen distractor objects, while the 0.8B model drops substantially to 10%.
+
+      <div class="uk-overflow-auto">
+      <table class="uk-table uk-table-divider uk-table-small uk-text-small">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Size</th>
+            <th>ID (%)</th>
+            <th>OOD (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="2" style="vertical-align: middle;"><strong>CLAP (Ours)</strong></td>
+            <td>0.8B</td>
+            <td>35.0</td>
+            <td>10.0</td>
+          </tr>
+          <tr style="background-color: #F6EFE6;">
+            <td><strong>2B</strong></td>
+            <td><strong>60.0</strong></td>
+            <td><strong>60.0</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      #### Demo
+      CLAP runs in real time on a UR5e arm. The clips compare 0.8B and 2B under in-distribution (ID) and out-of-distribution (OOD) conditions, where OOD scenes add unseen distractor objects.
+
+      <p class="uk-text-meta uk-margin-small-bottom uk-margin-top"><strong>In-distribution</strong> &mdash; <em>"grasp carrot and drop it onto the plate"</em></p>
+      <div class="uk-grid uk-grid-small uk-child-width-1-2" uk-grid>
+        <div>
+          <img src="08b_in.gif" alt="CLAP 0.8B in-distribution" class="uk-responsive-width" style="border-radius: 12px;" />
+          <p class="uk-text-meta uk-text-center">CLAP (0.8B)</p>
+        </div>
+        <div>
+          <img src="2b_in.gif" alt="CLAP 2B in-distribution" class="uk-responsive-width" style="border-radius: 12px;" />
+          <p class="uk-text-meta uk-text-center">CLAP (2B)</p>
+        </div>
+      </div>
+
+      <p class="uk-text-meta uk-margin-small-bottom uk-margin-top"><strong>Out-of-distribution</strong> &mdash; <em>"pick up tomato and place it on the plate"</em></p>
+      <div class="uk-grid uk-grid-small uk-child-width-1-2" uk-grid>
+        <div>
+          <img src="08b_ood.gif" alt="CLAP 0.8B out-of-distribution" class="uk-responsive-width" style="border-radius: 12px;" />
+          <p class="uk-text-meta uk-text-center">CLAP (0.8B)</p>
+        </div>
+        <div>
+          <img src="2b_ood.gif" alt="CLAP 2B out-of-distribution" class="uk-responsive-width" style="border-radius: 12px;" />
+          <p class="uk-text-meta uk-text-center">CLAP (2B)</p>
+        </div>
+      </div>
+
+projects:
+  - title: 'Can Compact Language Models Search Like Agents? Distillation-Guided Policy Optimization for Preserving Agentic RAG Capability'
+    journal: "ACL'26"
+    img: https://omron-sinicx.github.io/dgpo/acl26_fig2_v3.png
+    description: |
+      Propose Distillation-Guided Policy Optimization (DGPO), a two-phase training framework combining cold-start knowledge distillation and selective teacher-guided reinforcement learning
+    url: https://omron-sinicx.github.io/dgpo/
