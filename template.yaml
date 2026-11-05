@@ -290,7 +290,10 @@ body:
 
       A frozen teacher VLM from the same Qwen3.5 family describes the robot's own training frames (scene, object positions, robot and gripper state, step-by-step plan), and the student reproduces these descriptions alongside CLAP's action targets:
 
-      <img src="calm.png" alt="CALM: teacher VLM auto-labels robot frames for co-training" class="uk-align-center uk-responsive-width" />
+      <figure class="uk-margin-medium" style="max-width: 70%; margin-left: auto; margin-right: auto;">
+        <img src="calm.png" alt="CALM: teacher VLM auto-labels robot frames for co-training" class="uk-responsive-width" />
+        <figcaption class="uk-text-meta uk-text-center uk-margin-small-top"><strong>CALM: Co-training with Auto-labels from Language Model.</strong> A frozen Qwen3.5-4B teacher describes each robot frame, and the 0.8B student learns to reproduce the description (SeqKD) alongside CLAP's action targets.</figcaption>
+      </figure>
 
       $$\mathcal{L} = (1 - \alpha)\,\mathcal{L}_{\text{VLA}} + \alpha\,\mathcal{L}_{\text{VQA}}, \quad \alpha = 0.2$$
 
