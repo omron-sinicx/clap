@@ -5,7 +5,7 @@ title: '👏CLAP: Direct VLM-to-VLA Adaptation via Language-Action Grounding'
 conference: CoRL2026
 resources:
   paper: https://arxiv.org/abs/2607.08974
-  poster:
+  poster: clap_corl2026.pdf
   code: https://github.com/omron-sinicx/clap
   video:
   blog:
@@ -283,6 +283,32 @@ body:
           <p class="uk-text-meta uk-text-center">CLAP (2B)</p>
         </div>
       </div>
+
+  - title: Combined with Co-Training
+    text: |
+      CLAP anchors the policy at the **output level**: a language prefix inside every action sample. We further combine it with **CALM** (**C**o-training with **A**uto-labels from **L**anguage **M**odel), a **data-level** anchor presented at the CoRL 2026 Workshop on [*Efficient Foundation Models for Real-Time Embodied AI*](https://efficient-embodied-ai.github.io/).
+
+      A frozen teacher VLM from the same Qwen3.5 family describes the robot's own training frames (scene, object positions, robot and gripper state, step-by-step plan), and the student reproduces these descriptions alongside CLAP's action targets:
+
+      <img src="calm.png" alt="CALM: teacher VLM auto-labels robot frames for co-training" class="uk-align-center uk-responsive-width" />
+
+      $$\mathcal{L} = (1 - \alpha)\,\mathcal{L}_{\text{VLA}} + \alpha\,\mathcal{L}_{\text{VQA}}, \quad \alpha = 0.2$$
+
+      No human labels and no external VQA data are needed. On the real UR5e (120 demos, 20 trials per configuration), combining both anchors lifts the 0.8B policy from **25% → 85%** in-domain and from **10% → 50%** with unseen distractors, using a 4B teacher.<sup>*</sup>
+
+      <span class="uk-text-meta"><sup>*</sup> The CALM real-robot experiments were conducted separately from the Real-Robot Deployment section above, under different evaluation conditions, so the numbers are not directly comparable.</span>
+
+      #### Posters
+      Click a poster to enlarge it.
+    posters:
+      - title: CLAP
+        venue: CoRL 2026
+        image: clap_corl2026.webp
+        pdf: clap_corl2026.pdf
+      - title: CLAP + CALM
+        venue: CoRL 2026 Workshop
+        image: calm_corl2026.webp
+        pdf: calm_corl2026.pdf
 
 projects:
   - title: 'Can Compact Language Models Search Like Agents? Distillation-Guided Policy Optimization for Preserving Agentic RAG Capability'

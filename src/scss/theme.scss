@@ -60,3 +60,71 @@ b {
   font-weight: 700;
 }
 // @import "uikit/src/scss/uikit-theme.scss";
+
+// poster gallery + modal (see components/posters.jsx)
+.poster-thumb {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  &:hover img,
+  &:focus-visible img {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.poster-dialog {
+  width: min(96vw, calc((92vh - 48px) * 2));
+  max-width: none;
+  max-height: 96vh;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+  overflow: auto;
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.75);
+  }
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    cursor: zoom-in;
+  }
+}
+
+.poster-dialog-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  a {
+    font-weight: 400;
+  }
+  > span:last-child {
+    display: flex;
+    align-items: center;
+  }
+}
+
+::view-transition-group(poster-zoom) {
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}

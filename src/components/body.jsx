@@ -2,6 +2,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
+import Posters from '@/components/posters.jsx';
 
 const renderer = new marked.Renderer();
 renderer.table = (header, body) => {
@@ -54,6 +55,7 @@ export default class Body extends React.Component {
               <Content title={subsection.title} />
               <Content image={subsection.image} />
               <Content text={subsection.text} />
+              <Posters posters={subsection.posters} />
             </div>
           );
         })}

@@ -1,3 +1,4 @@
 [default.extend-words]
 
 SINIC = "SINIC"
+anguage = "anguage" # **L**anguage in CALM acronym
