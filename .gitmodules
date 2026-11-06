@@ -1,0 +1,4 @@
+[submodule "libs/libero"]
+	path = libs/libero
+	url = https://github.com/RLinf/LIBERO.git
+	branch = master

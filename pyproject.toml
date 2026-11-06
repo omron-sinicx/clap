@@ -1,0 +1,148 @@
+[project]
+name = "clap"
+version = "0.1.0"
+description = "CLAP: Direct VLM-to-VLA Adaptation via Language-Action Grounding"
+readme = "README.md"
+license = "CC-BY-NC-4.0"
+license-files = ["LICENSE", "NOTICE", "LICENSES/*", "libs/RoboVerse/LICENSE"]
+authors = [
+  { name = "Mai Nishimura", email = "mai.nishimura@sinicx.com" },
+  { name = "Yuri Ishitoya" },
+]
+requires-python = ">=3.10"
+dependencies = [
+  # torch / torchvision upper bounds come from lerobot 0.3.3
+  "torch>=2.6,<2.8",
+  "torchvision>=0.21,<0.23",
+  "transformers==5.2.*",       # Qwen3.5 (Qwen3_5ForConditionalGeneration)
+  "accelerate",                # device_map= in ClapPolicy.from_pretrained
+  "qwen-vl-utils",
+  "hf-xet",
+  "lerobot==0.3.3",            # codebase v2.1, matches physical-intelligence/libero
+  "datasets==3.5.0",           # lerobot 0.3.3 breaks with newer datasets
+  # deps of the vendored roboverse package (libs/RoboVerse/roboverse)
+  "yacs==0.1.8",
+  "einops>=0.8",
+  "numpy",
+  "pillow",
+  "pyyaml",
+  "tqdm>=4.67.3,<5",
+  "rich>=13",                  # colored result table (pixi run libero-table)
+  "trackio[spaces]",           # [spaces] pulls in pyarrow, needed for trackio.sync(sdk="static")
+  # CUDA kernels. flash-attn / causal-conv1d are sdist-only and build against the
+  # installed torch (no build isolation; see [tool.pixi.pypi-options]).
+  # fla + causal-conv1d enable the fast path of Qwen3.5's Gated DeltaNet layers;
+  # without them transformers silently falls back to a much slower torch path.
+  "flash-attn==2.8.3",
+  "flash-linear-attention>=0.4.2,<0.5",
+  "causal-conv1d==1.6.1",
+]
+
+[project.scripts]
+clap-train = "clap.train:main"
+clap-upload-hf = "clap.upload_to_hf:main"
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.hatch.build.targets.wheel]
+# roboverse (NVIDIA, CC BY-NC 4.0) is vendored under libs/RoboVerse and shipped
+# as a top-level package of this distribution.
+packages = ["clap", "libs/RoboVerse/roboverse"]
+
+[tool.isort]
+profile = "black"
+
+[tool.pixi.workspace]
+requires-pixi = ">=0.84.1"
+channels = ["conda-forge"]
+# Default pixi glibc for linux-64 is 2.28 (manylinux_2_28); LeRobot 0.3.x pulls
+# rerun-sdk wheels that need manylinux_2_31.
+platforms = [{ name = "linux-64-glibc-2-31", platform = "linux-64", glibc = "2.31" }]
+
+[tool.pixi.activation.env]
+C_INCLUDE_PATH = "$CONDA_PREFIX/include"
+TORCHINDUCTOR_CACHE_DIR = "$HOME/.cache/torchinductor"
+# LIBERO caches absolute data paths in $LIBERO_CONFIG_PATH/config.yaml on
+# first import (default ~/.libero), shared by every env and project on the
+# machine. Keep it per pixi environment so bddl / init states always come from the
+# libs/libero checkout installed in that environment.
+LIBERO_CONFIG_PATH = "$CONDA_PREFIX/.libero-config"
+
+[tool.pixi.pypi-options]
+no-build-isolation = [
+  "flash-attn",
+  "flash-linear-attention",
+  "causal-conv1d",
+]
+
+[tool.pixi.pypi-options.dependency-overrides]
+
+[tool.pixi.pypi-dependencies]
+clap = { path = ".", editable = true }
+
+# Simulator deps for LIBERO evaluation
+[tool.pixi.feature.sim.pypi-dependencies]
+robosuite = "==1.4.0"
+mujoco = "==3.1.6"
+bddl = "==1.0.1"
+easydict = "*"
+future = "*"
+cloudpickle = "*"
+# LIBERO runtime deps
+termcolor = "*"
+matplotlib = "*"
+gym = "*"
+h5py = "*"
+imageio = "*"
+
+[tool.pixi.feature.libero.pypi-dependencies]
+libero = { path = "libs/libero", editable = true }
+
+
+[tool.pixi.tasks]
+train = { cmd = "python -m clap.train --config configs/{{ config }}.yaml {% if devices %}--devices {{ devices }}{% endif %}", args = [
+  { "arg" = "config", "default" = "clap_0.8b_4gpu" },
+  { "arg" = "devices", "default" = "" },
+], description = "Train CLAP: pixi run train [config] [gpu-ids]" }
+eval = { cmd = "bash eval/run_eval.sh {{ model }} {{ suite }} {{ gpus }} {{ envs }}", args = [
+  { "arg" = "model", "default" = "omron-sinicx/CLAP-Qwen3.5-0.8B" },
+  { "arg" = "suite", "default" = "libero_spatial" },
+  { "arg" = "gpus", "default" = "4" },
+  { "arg" = "envs", "default" = "25" },
+], default-environment = "eval-libero", description = "Evaluate on LIBERO: pixi run eval [model] [suite] [gpus] [envs-per-gpu]" }
+libero-table = { cmd = "python eval/show_results.py --log-dir {{ log_dir }} {{ format }}", args = [
+  { "arg" = "log_dir", "default" = "eval/logs" },
+  { "arg" = "format", "default" = "" },
+], description = "Summarize LIBERO results (in-progress runs marked with *): pixi run libero-table [log-dir] [--markdown]" }
+
+[tool.pixi.dependencies]
+python = "==3.12"
+setuptools = ">=82.0.1,<83"
+psutil = ">=7.2.2,<8"       # for flash-attn build ---
+packaging = ">=26.0,<27"
+ninja = ">=1.13.2,<2"
+wheel = ">=0.46.3,<0.47"
+libxcrypt = ">=4.4.36,<5"
+# CUDA toolkit (nvcc, headers), only used to build the flash-attn / causal-conv1d
+# kernels; at run time torch uses the CUDA libraries of its own wheel (cu126).
+# The major version (12) must match torch's CUDA; the minor version may differ.
+cuda = "==12.4.1"
+cuda-version = "==12.4"
+evdev = ">=1.9.3,<2"
+jq = ">=1.8.1,<2"
+# Pin at datasets==3.5.0's upper bound (fsspec[http]<=2024.12.0); trackio
+# has no upper bound of its own, so leaving this unpinned lets the conda
+# solver pick a too-new fsspec and conflict with datasets.
+fsspec = "==2024.12.0"
+
+[dependency-groups]
+lint = ["prek>=0.3.8,<0.4", "black==23.3.0", "isort==5.12.0", "flake8==7.1.0"]
+
+[tool.pixi.environments]
+eval-libero = ["sim", "libero"]
+lint = { features = ["lint"], no-default-feature = true }
+
+[tool.pixi.feature.lint.dependencies]
+python = "==3.12"

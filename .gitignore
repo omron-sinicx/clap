@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+outputs/
+runs/
+*.log
+
+.DS_Store
+.vscode/
+.idea/
+
+.hf_token
+.env
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+eval/logs/*
+
+logs/*
+
+# Internal notes (moved to GitHub issues); keep only reproduction.md and its assets
+docs/*.md
+!docs/reproduction.md

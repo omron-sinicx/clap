@@ -1,0 +1,20 @@
+# Used by prek (https://github.com/j178/prek); pre-commit-compatible schema.
+repos:
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: isort (Python)
+
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        name: black (Python)
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.0
+    hooks:
+      - id: flake8
+        name: flake8 (Python)
+        args: ["--max-line-length=120"]

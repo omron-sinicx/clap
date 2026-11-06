@@ -1,0 +1,36 @@
+model: "Qwen/Qwen3.5-2B"
+output_dir: "outputs/clap_2b_4gpu"
+
+# 8 per GPU x 4 GPUs x 4 accumulation steps = 128 samples per update
+epochs: 7
+batch_size: 8
+lr: 1e-5
+gradient_accumulation_steps: 4
+clip_grad_norm: 0.0
+weight_decay: 1e-10
+action_mask_aug_per: 0.0
+# Think-text settings, matching the paper runs. LIBERO actions are per-step
+# deltas, so action_is_absolute must be false (true is for absolute-pose robots).
+action_is_absolute: false
+think_sum_decimal: "0f"
+think_rotation_precision: 10
+distributed_sampler: true
+seed: 42
+devices: "0,1,2,3"
+
+horizon: 8
+act_dim: 7
+num_bins: 1000
+img_size: 224
+num_cam: 2
+history: 1
+flash_attn: true
+num_workers: 8
+
+roboverse_cfg: "libs/RoboVerse/roboverse/configs/img_libero_aug.yaml"
+roboverse_opts: "IMAGE.crop_img:0.875:IMAGE.img_size:224:IMAGE.cam_list:('3p1','3p2')"
+
+trackio: true
+trackio_project: "clap"
+log_sample_steps: 500
+log_num_samples: 4

@@ -1,0 +1,71 @@
+CLAP: Direct VLM-to-VLA Adaptation via Language-Action Grounding
+Copyright (c) 2026 OMRON SINIC X Corporation
+
+This repository is licensed under CC BY-NC 4.0 (see LICENSE). It includes or
+adapts material from the third-party projects listed below. Each component
+remains under its original license. Changes are indicated as required by
+those licenses.
+
+-------------------------------------------------------------------------------
+1. VLA-0
+   https://github.com/NVlabs/vla0
+   Copyright (c) 2025-2026, NVIDIA CORPORATION & AFFILIATES
+   License: CC BY-NC 4.0 (https://creativecommons.org/licenses/by-nc/4.0/)
+
+   Parts of the training and inference code were adapted from
+   rv_train/models/qwen/model.py and rv_train/train.py:
+     - clap/utils.py: system prompt, chat formatting (format_data), action
+       discretization (actions_to_text / text_to_actions), image tiling, and
+       action-token mask augmentation (apply_action_mask_aug). Rewritten as
+       standalone functions; the system prompt is extended with the CLAP
+       <think> language-action prefix.
+     - clap/train.py: training-loop design (label masking, LR scaled by the
+       number of GPUs). Re-implemented with DDP, gradient accumulation and
+       trackio logging.
+     - clap/policy.py: inference (image preprocessing, prompting, generation
+       and parsing of the integer action sequence), re-implemented for
+       batched CLAP inference.
+
+   eval/eval.py is an independent implementation that follows the LIBERO
+   evaluation protocol of VLA-0 (roboverse/evals/libero/eval.py), which in
+   turn comes from the LIBERO example of openpi
+   (https://github.com/Physical-Intelligence/openpi): environment resolution,
+   dummy-action warm-up, camera flip and the per-suite maximum episode
+   lengths. Its batched design (vectorized LIBERO environments with one
+   batched generate() call per step) is inspired by RLinf
+   (https://github.com/RLinf/RLinf).
+
+-------------------------------------------------------------------------------
+2. RoboVerse (distributed with VLA-0)
+   libs/RoboVerse/
+   Copyright (c) 2025-2026, NVIDIA CORPORATION & AFFILIATES
+   License: CC BY-NC 4.0 (see libs/RoboVerse/LICENSE)
+
+   Only the parts needed to load LIBERO through LeRobot are vendored. Changes
+   from the VLA-0 version:
+     - removed: the evaluation code (roboverse/evals), setup.py and the
+       development tooling (Makefile, lint configs)
+     - roboverse/datasets/lerobot/dataloader.py  (modified: lerobot 0.3.3 API
+       only; multi-dataset, episode filtering, delta-action and no-op
+       filtering options removed)
+     - roboverse/utils/stats_utils.py            (modified: stats are taken from
+       the dataset metadata; the iterate-and-cache path is removed)
+     - roboverse/unifiers/image_unifier.py, roboverse/main.py,
+       roboverse/configs.py, roboverse/constants.py
+                                                 (modified: unused options and
+       debug entry points removed)
+
+-------------------------------------------------------------------------------
+3. LAP
+   https://github.com/lihzha/lap
+   Copyright (c) the LAP authors
+   License: Apache License 2.0 (see LICENSES/Apache-2.0.txt)
+
+   clap/models/clap_language.py ports the rule-based action-to-language
+   phrasing from src/lap/policies/transforms/action_text.py, with
+   modifications.
+
+-------------------------------------------------------------------------------
+Git submodule (not included in this repository; fetched separately)
+   - LIBERO      https://github.com/Lifelong-Robot-Learning/LIBERO   MIT License
+                 (pinned to the RLinf fork: https://github.com/RLinf/LIBERO)
