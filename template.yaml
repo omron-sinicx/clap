@@ -312,6 +312,9 @@ body:
         venue: CoRL 2026 Workshop
         image: calm_corl2026.webp
         pdf: calm_corl2026.pdf
+  - title: Acknowledgements
+    text: |
+      This work was supported by the "Development Acceleration Use" program of ABCI 3.0, which is provided by AIST and AIST Solutions, and JST PRESTO, Japan, Grant Number JPMJPR2518.
 
 projects:
   - title: 'Can Compact Language Models Search Like Agents? Distillation-Guided Policy Optimization for Preserving Agentic RAG Capability'
